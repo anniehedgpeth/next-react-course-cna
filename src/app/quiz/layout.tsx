@@ -1,12 +1,7 @@
 export default function NestedLayout({
-                                         children,
-                                     }:{
-    children: React.ReactNode;
+  children,
+}: {
+  children: React.ReactNode;
 }) {
-    return (
-        <nav>
-            This is my navigation.
-            {children}
-        </nav>
-    )
+  return <nav>{children}</nav>;
 }
