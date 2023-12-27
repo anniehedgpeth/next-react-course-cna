@@ -1,4 +1,5 @@
 import sql from "@/lib/database";
+import { revalidatePath } from "next/cache";
 
 function Answer({ id }: { id: number }) {
   return (
@@ -37,10 +38,12 @@ export default function QuizForm() {
         ( (SELECT quiz_id FROM new_quiz), ${answers[1].answer}, ${answers[1].isCorrect}),
         ( (SELECT quiz_id FROM new_quiz), ${answers[2].answer}, ${answers[2].isCorrect});
     `;
+
+    revalidatePath("/");
   }
 
   return (
-    <form className="flex flex-col gap-2 ml-2 mt-8 max-w-xs">
+    <form className="flex flex-col gap-2 mt-8 max-w-xs" action={createQuiz}>
       <h3 className="text=lg font-semibold">Create Quiz</h3>
       <label>
         Title

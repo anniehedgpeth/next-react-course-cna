@@ -6,7 +6,7 @@ async function Quiz({
   searchParams,
 }: {
   id: string;
-  searchParams: { show?: string };
+  searchParams: { isQuizCorrect?: string };
 }) {
   const answers = await sql`
     SELECT
@@ -27,11 +27,19 @@ async function Quiz({
       <h1 className="text-2xl text-gray-700">{answers[0].quiz_description}</h1>
       <h1 className="text-xl my-4">{answers[0].quiz_question}</h1>
       <ul>
-        {answers.map((answer) => (
+        {answers.map((answer, key) => (
           <li key={answer.answer_id}>
             <p>
-              {answer.answer_text}
-              {searchParams.show === "true" && answer.is_correct && " ✅"}{" "}
+              <input type="checkbox" name={`answer-${key + 1}`}></input>
+              <input
+                type="hidden"
+                name={`isCorrect-answer-${key + 1}`}
+                value={answer.is_correct}
+              />
+              <label>
+                {answer.answer_text}
+                {searchParams.isQuizCorrect && answer.is_correct && " ✅"}{" "}
+              </label>
             </p>
           </li>
         ))}
@@ -45,21 +53,36 @@ export default function QuizPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { show?: string };
+  searchParams: { isQuizCorrect?: string };
 }) {
+  async function checkAnswer(formData: FormData) {
+    "use server";
+    console.log(JSON.stringify(formData.entries(), null, " "));
+    let isQuizCorrect = true;
+    [1, 2, 3].map((id) => {
+      const isCorrect = formData.get(`isCorrect-answer-${id}`) === "true";
+      const isChecked = formData.get(`answer-${id}`) === "on";
+      console.log(
+        `ID: ${id}, isCorrect: ${isCorrect}, isChecked: ${isChecked}`
+      );
+      if ((isChecked && !isCorrect) || (!isChecked && isCorrect)) {
+        isQuizCorrect = false;
+      }
+    });
+
+    redirect(`/quiz/${params.id}?isQuizCorrect=${isQuizCorrect}`);
+  }
   return (
     <section>
-      <Quiz id={params.id} searchParams={searchParams} />
-      <form
-        action={async () => {
-          "use server";
-          redirect(`/quiz/${params.id}?show=true`);
-        }}
-      >
+      <form action={checkAnswer}>
+        <Quiz id={params.id} searchParams={searchParams} />
         <button className="bg-gray-200 p-2 m-2 rounded hover:bg-gray-300 transition-all">
-          Show Answer
+          Check Answer
         </button>
       </form>
+
+      {searchParams.isQuizCorrect === "true" && <p>Good job!</p>}
+      {searchParams.isQuizCorrect === "false" && <p>Incorrect</p>}
     </section>
   );
 }
